@@ -117,6 +117,26 @@ def place_glider() -> None:
         if 0 <= r < ROWS and 0 <= c < COLS:
             grid.cells[r][c] = True
 
+
+# Gosper Glider Gun
+GLIDER_GUN: list[tuple[int, int]] = [
+    (0, 24),
+    (1, 22), (1, 24),
+    (2, 12), (2, 13), (2, 20), (2, 21), (2, 34), (2, 35),
+    (3, 11), (3, 15), (3, 20), (3, 21), (3, 34), (3, 35),
+    (4,  0), (4,  1), (4, 10), (4, 16), (4, 20), (4, 21),
+    (5,  0), (5,  1), (5, 10), (5, 14), (5, 16), (5, 17), (5, 22), (5, 24),
+    (6, 10), (6, 16), (6, 24),
+    (7, 11), (7, 15),
+    (8, 12), (8, 13),
+]
+
+def place_glider_gun() -> None:
+    for dr, dc in GLIDER_GUN:
+        r, c = 1 + dr, 1 + dc
+        if 0 <= r < ROWS and 0 <= c < COLS:
+            grid.cells[r][c] = True
+
 def make_buttons() -> tuple[list["Button"], "Button"]:
     buttons: list[Button] = []
     y: int = 10
@@ -159,6 +179,9 @@ def make_buttons() -> tuple[list["Button"], "Button"]:
 
     y += BH + 4
     buttons.append(Button((SX, y, BW, BH), "Plane", COLOR_BTN, place_glider))
+
+    y += BH + 4
+    buttons.append(Button((SX, y, BW, BH), "Launcher", COLOR_BTN, place_glider_gun))
 
     return buttons, step_btn
 
