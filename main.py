@@ -2,12 +2,22 @@ import pygame
 import random
 import importlib
 import os
+import sys
+import traceback
 import gameOfLife
 from grid import Grid, COLS, ROWS, CELL_SIZE
 from state import save_slot, load_slot, slot_exists
 
+_step_error = False
+
 def step(grid):
-    gameOfLife.step(grid)
+    global _step_error
+    try:
+        gameOfLife.step(grid)
+        _step_error = False
+    except Exception as e:
+        traceback.print_exc(file=sys.stderr)
+        _step_error = True
 
 _gol_mtime = os.path.getmtime(gameOfLife.__file__)
 _gol_error = False
@@ -64,6 +74,7 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Game of Life")
 font = pygame.font.SysFont("monospace", 11)
+font_large = pygame.font.SysFont("monospace", 18)
 
 grid = Grid()
 clock = pygame.time.Clock()
@@ -116,6 +127,16 @@ def _load(slot):
 
 buttons, step_btn = make_buttons()
 
+dragging = False
+drag_value = True  # True = painting alive, False = erasing
+
+
+def apply_drag(px, py):
+    col = px // CELL_SIZE
+    row = py // CELL_SIZE
+    if 0 <= row < ROWS and 0 <= col < COLS:
+        grid.cells[row][col] = drag_value
+
 
 def _draw_error_triangle(surface):
     r = step_btn.rect
@@ -128,6 +149,14 @@ def _draw_error_triangle(surface):
         (x,          cy + h // 2),
     ])
 
+def _draw_step_error(surface):
+    if pygame.time.get_ticks() % 600 < 300:
+        r = step_btn.rect
+        x = r.right + 6
+        cy = r.centery
+        text = font.render("!", True, (220, 40, 40))
+        surface.blit(text, text.get_rect(center=(x + 5, cy)))
+
 
 running = True
 while running:
@@ -135,12 +164,20 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if not any(b.handle_click(event.pos) for b in buttons):
+            if event.button == 1 and not any(b.handle_click(event.pos) for b in buttons):
+                dragging = True
                 px, py = event.pos
                 col = px // CELL_SIZE
                 row = py // CELL_SIZE
                 if 0 <= row < ROWS and 0 <= col < COLS:
-                    grid.toggle(row, col)
+                    drag_value = not grid.cells[row][col]
+                    apply_drag(px, py)
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                dragging = False
+        elif event.type == pygame.MOUSEMOTION:
+            if dragging:
+                apply_drag(*event.pos)
 
     _reload_if_changed()
     grid.draw(screen)
@@ -149,6 +186,16 @@ while running:
         b.draw(screen, font)
     if _gol_error:
         _draw_error_triangle(screen)
+    if _step_error:
+        _draw_step_error(screen)
+
+    mx, my = pygame.mouse.get_pos()
+    col = mx // CELL_SIZE
+    row = my // CELL_SIZE
+    if 0 <= row < ROWS and 0 <= col < COLS:
+        coord_text = font_large.render(f"{col}, {row}", True, (160, 160, 160))
+        screen.blit(coord_text, (SX, HEIGHT - BH))
+
     pygame.display.flip()
     clock.tick(60)
 
