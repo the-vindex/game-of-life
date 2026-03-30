@@ -137,6 +137,27 @@ def place_glider_gun() -> None:
         if 0 <= r < ROWS and 0 <= c < COLS:
             grid.cells[r][c] = True
 
+
+# Acorn — 7 cells, explodes for thousands of generations
+ACORN: list[tuple[int, int]] = [
+    (0, 1),
+    (1, 3),
+    (2, 0), (2, 1), (2, 4), (2, 5), (2, 6),
+]
+
+def place_acorn() -> None:
+    import random as _r
+    origins = [
+        (5, 5), (5, COLS // 2), (5, COLS - 10),
+        (ROWS // 2, 5), (ROWS // 2, COLS // 2), (ROWS // 2, COLS - 10),
+        (ROWS - 10, 5), (ROWS - 10, COLS // 2), (ROWS - 10, COLS - 10),
+    ]
+    for or_, oc in origins:
+        for dr, dc in ACORN:
+            r, c = or_ + dr, oc + dc
+            if 0 <= r < ROWS and 0 <= c < COLS:
+                grid.cells[r][c] = True
+
 def make_buttons() -> tuple[list["Button"], "Button"]:
     buttons: list[Button] = []
     y: int = 10
@@ -182,6 +203,9 @@ def make_buttons() -> tuple[list["Button"], "Button"]:
 
     y += BH + 4
     buttons.append(Button((SX, y, BW, BH), "Launcher", COLOR_BTN, place_glider_gun))
+
+    y += BH + 4
+    buttons.append(Button((SX, y, BW, BH), "Nuke", (100, 40, 40), place_acorn))
 
     return buttons, step_btn
 
@@ -277,6 +301,8 @@ while running:
         elif event.type == pygame.MOUSEMOTION:
             if dragging:
                 apply_drag(*event.pos)
+        elif event.type == pygame.MOUSEWHEEL:
+            _step_timer.interval = max(1, _step_timer.interval - event.y)
 
     _reload_if_changed()
 
