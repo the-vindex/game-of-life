@@ -104,6 +104,19 @@ BH = 22
 HW = (BW - 4) // 2
 
 
+# Glider pattern (relative offsets from top-left origin)
+GLIDER: list[tuple[int, int]] = [
+    (0, 1),
+    (1, 2),
+    (2, 0), (2, 1), (2, 2),
+]
+
+def place_glider() -> None:
+    for dr, dc in GLIDER:
+        r, c = 1 + dr, 1 + dc
+        if 0 <= r < ROWS and 0 <= c < COLS:
+            grid.cells[r][c] = True
+
 def make_buttons() -> tuple[list["Button"], "Button"]:
     buttons: list[Button] = []
     y: int = 10
@@ -136,8 +149,16 @@ def make_buttons() -> tuple[list["Button"], "Button"]:
     buttons.append(step_btn)
 
     y += BH + 4
-
     buttons.append(Button((SX, y, HW, BH), "Step x10", COLOR_BTN, lambda: setIterations(10)))
+
+    y += BH + 4
+    buttons.append(Button((SX, y, HW, BH), "Step x1000", COLOR_BTN, lambda: setIterations(1000)))
+
+    y += BH + 4
+    buttons.append(Button((SX, y, HW, BH), "Stop", COLOR_BTN, lambda: setIterations(0)))
+
+    y += BH + 4
+    buttons.append(Button((SX, y, BW, BH), "Plane", COLOR_BTN, place_glider))
 
     return buttons, step_btn
 
