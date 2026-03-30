@@ -4,13 +4,14 @@ import importlib
 import os
 import sys
 import traceback
+from collections.abc import Callable
 import gameOfLife
 from grid import Grid, COLS, ROWS, CELL_SIZE
 from state import save_slot, load_slot, slot_exists
 
 _step_error = False
 
-def step(grid):
+def step(grid: Grid) -> None:
     global _step_error
     try:
         gameOfLife.step(grid)
@@ -22,7 +23,7 @@ def step(grid):
 _gol_mtime = os.path.getmtime(gameOfLife.__file__)
 _gol_error = False
 
-def _reload_if_changed():
+def _reload_if_changed() -> None:
     global _gol_mtime, _gol_error
     try:
         mtime = os.path.getmtime(gameOfLife.__file__)
@@ -47,14 +48,14 @@ COLOR_HOVER = (85, 85, 85)
 
 
 class Button:
-    def __init__(self, rect, label, base_color, callback, filled_fn=None):
+    def __init__(self, rect: tuple[int, int, int, int] | pygame.Rect, label: str, base_color: tuple[int, int, int], callback: Callable[[], None], filled_fn: Callable[[], bool] | None = None) -> None:
         self.rect = pygame.Rect(rect)
         self.label = label
         self.base_color = base_color
         self.callback = callback
         self.filled_fn = filled_fn
 
-    def draw(self, surface, font):
+    def draw(self, surface: pygame.Surface, font: pygame.font.Font) -> None:
         hovered = self.rect.collidepoint(pygame.mouse.get_pos())
         color = COLOR_HOVER if hovered else self.base_color
         if self.filled_fn and self.filled_fn():
@@ -63,7 +64,7 @@ class Button:
         text = font.render(self.label, True, (210, 210, 210))
         surface.blit(text, text.get_rect(center=self.rect.center))
 
-    def handle_click(self, pos):
+    def handle_click(self, pos: tuple[int, int]) -> bool:
         if self.rect.collidepoint(pos):
             self.callback()
             return True
@@ -85,7 +86,7 @@ BH = 22
 HW = (BW - 4) // 2
 
 
-def make_buttons():
+def make_buttons() -> tuple[list["Button"], "Button"]:
     buttons = []
     y = 10
 
@@ -119,7 +120,7 @@ def make_buttons():
     return buttons, step_btn
 
 
-def _load(slot):
+def _load(slot: int) -> None:
     data = load_slot(slot)
     if data is not None:
         grid.cells = data
@@ -131,14 +132,14 @@ dragging = False
 drag_value = True  # True = painting alive, False = erasing
 
 
-def apply_drag(px, py):
+def apply_drag(px: int, py: int) -> None:
     col = px // CELL_SIZE
     row = py // CELL_SIZE
     if 0 <= row < ROWS and 0 <= col < COLS:
         grid.cells[row][col] = drag_value
 
 
-def _draw_error_triangle(surface):
+def _draw_error_triangle(surface: pygame.Surface) -> None:
     r = step_btn.rect
     x = r.right + 6
     cy = r.centery
@@ -149,7 +150,7 @@ def _draw_error_triangle(surface):
         (x,          cy + h // 2),
     ])
 
-def _draw_step_error(surface):
+def _draw_step_error(surface: pygame.Surface) -> None:
     if pygame.time.get_ticks() % 600 < 300:
         r = step_btn.rect
         x = r.right + 6

@@ -10,39 +10,39 @@ COLOR_GRID = (50, 50, 50)
 
 
 class Grid:
-    def __init__(self):
-        self.cells = [[False] * COLS for _ in range(ROWS)]
+    def __init__(self) -> None:
+        self.cells: list[list[bool]] = [[False] * COLS for _ in range(ROWS)]
 
-    def toggle(self, row, col):
+    def toggle(self, row: int, col: int) -> None:
         self.checkCoordsInBounds(row, col)
         self.cells[row][col] = not self.cells[row][col]
 
-    def set(self, row, col, value):
+    def set(self, row: int, col: int, value: bool) -> None:
         self.checkCoordsInBounds(row, col)
         self.cells[row][col] = value
 
-    def setOn(self, row, col):
+    def setOn(self, row: int, col: int) -> None:
         self.checkCoordsInBounds(row, col)
         self.cells[row][col] = True
 
-    def setOff(self, row, col):
+    def setOff(self, row: int, col: int) -> None:
         self.checkCoordsInBounds(row, col)
         self.cells[row][col] = False
 
-    def safeGet(self, row, col):
+    def safeGet(self, row: int, col: int) -> bool:
         if self.isCoordsInBounds(row,col):
             return self.cells[row][col]
         else:
             return False
 
-    def isCoordsInBounds(self, row, col):
+    def isCoordsInBounds(self, row: int, col: int) -> bool:
         return not(row <0 or col <0 or row>= ROWS or col >= COLS)
 
-    def checkCoordsInBounds(self, row, col):
+    def checkCoordsInBounds(self, row: int, col: int) -> None:
         if not self.isCoordsInBounds(row,col):        
             raise f"Out of bounds: {row}, {col}"
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface) -> None:
         surface.fill(COLOR_BG)
         for row in range(ROWS):
             for col in range(COLS):
@@ -57,7 +57,7 @@ class Grid:
             pygame.draw.line(surface, COLOR_GRID, (0, y), (COLS * CELL_SIZE, y))
 
 
-    def setFromGrid(self, other_grid):
+    def setFromGrid(self, other_grid: "Grid") -> None:
         for row in range(ROWS):
             for col in range(COLS):
                 self.cells[row][col] = other_grid.cells[row][col]

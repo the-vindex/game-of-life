@@ -1,6 +1,6 @@
 from grid import Grid, COLS, ROWS
 
-def step(grid):
+def step(grid: Grid) -> None:
     new_grid = Grid()
 
     for row in range(COLS):
@@ -11,7 +11,7 @@ def step(grid):
 
     grid.setFromGrid(new_grid)
 
-def evalCell(grid, row, col):
+def evalCell(grid: Grid, row: int, col: int) -> bool:
     pocet_sousedu = 0
     pocet_sousedu = pocet_sousedu + 1 if grid.safeGet(row-1, col) else 0# nadeMnou
     pocet_sousedu = pocet_sousedu + 1 if grid.safeGet(row+1, col) else 0 # podeMnou
