@@ -29,6 +29,10 @@ class Grid:
         self.checkCoordsInBounds(row, col)
         self.cells[row][col] = False
 
+    def get(self, row: int, col: int) -> bool:
+        self.checkCoordsInBounds(row, col)
+        return self.cells[row][col]
+
     def safeGet(self, row: int, col: int) -> bool:
         if self.isCoordsInBounds(row,col):
             return self.cells[row][col]
@@ -40,7 +44,7 @@ class Grid:
 
     def checkCoordsInBounds(self, row: int, col: int) -> None:
         if not self.isCoordsInBounds(row,col):        
-            raise f"Out of bounds: {row}, {col}"
+            raise Exception(f"Out of bounds: {row}, {col}")
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill(COLOR_BG)

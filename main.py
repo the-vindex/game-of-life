@@ -10,11 +10,18 @@ from grid import Grid, COLS, ROWS, CELL_SIZE
 from state import save_slot, load_slot, slot_exists
 
 _step_error = False
+_iterations: int = 0
+_step_interval = 10
+_frame_counter = 0
 
-def step(grid: Grid) -> None:
+def setIterations(count: int) -> None:
+    global _iterations
+    _iterations = count
+
+def step(grid: Grid, count: int = 1) -> None:
     global _step_error
     try:
-        gameOfLife.step(grid)
+        gameOfLife.step(grid, count)
         _step_error = False
     except Exception as e:
         traceback.print_exc(file=sys.stderr)
@@ -87,13 +94,13 @@ HW = (BW - 4) // 2
 
 
 def make_buttons() -> tuple[list["Button"], "Button"]:
-    buttons = []
-    y = 10
+    buttons: list[Button] = []
+    y: int = 10
 
-    def clear():
+    def clear() -> None:
         grid.cells[:] = [[False] * COLS for _ in range(ROWS)]
 
-    def randomize():
+    def randomize() -> None:
         grid.cells[:] = [[random.random() < 0.3 for _ in range(COLS)] for _ in range(ROWS)]
 
     buttons.append(Button((SX, y, BW, BH), "Clear", COLOR_BTN, clear))
@@ -116,6 +123,10 @@ def make_buttons() -> tuple[list["Button"], "Button"]:
 
     step_btn = Button((SX, y, HW, BH), "Step", COLOR_BTN, lambda: step(grid))
     buttons.append(step_btn)
+
+    y += BH + 4
+
+    buttons.append(Button((SX, y, HW, BH), "Step x10", COLOR_BTN, lambda: setIterations(10)))
 
     return buttons, step_btn
 
@@ -213,6 +224,14 @@ while running:
                 apply_drag(*event.pos)
 
     _reload_if_changed()
+
+    if _iterations > 0:
+        _frame_counter += 1
+        if _frame_counter >= _step_interval:
+            _frame_counter = 0
+            step(grid)
+            _iterations -= 1
+
     grid.draw(screen)
     _draw_cell_eval(screen)
     pygame.draw.rect(screen, COLOR_SIDEBAR, (GRID_WIDTH, 0, SIDEBAR_WIDTH, HEIGHT))
