@@ -11,8 +11,19 @@ from state import save_slot, load_slot, slot_exists
 
 _step_error = False
 _iterations: int = 0
-_step_interval = 10
-_frame_counter = 0
+class StepTimer:
+    def __init__(self, interval: int = 10) -> None:
+        self.interval = interval
+        self._counter: int = 0
+
+    def tick(self) -> bool:
+        self._counter += 1
+        if self._counter >= self.interval:
+            self._counter = 0
+            return True
+        return False
+
+_step_timer = StepTimer()
 
 def setIterations(count: int) -> None:
     global _iterations
@@ -225,12 +236,9 @@ while running:
 
     _reload_if_changed()
 
-    if _iterations > 0:
-        _frame_counter += 1
-        if _frame_counter >= _step_interval:
-            _frame_counter = 0
-            step(grid)
-            _iterations -= 1
+    if _iterations > 0 and _step_timer.tick():
+        step(grid)
+        _iterations -= 1
 
     grid.draw(screen)
     _draw_cell_eval(screen)
