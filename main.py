@@ -131,6 +131,36 @@ buttons, step_btn = make_buttons()
 dragging = False
 drag_value = True  # True = painting alive, False = erasing
 
+# (row, col, will_live: bool, start_ticks) or None
+_cell_eval: tuple[int, int, bool, int] | None = None
+EVAL_DURATION = 2000  # ms
+EVAL_BLINK_PERIOD = 200  # ms
+
+
+def _eval_cell_at(px: int, py: int) -> None:
+    global _cell_eval
+    col = px // CELL_SIZE
+    row = py // CELL_SIZE
+    if not (0 <= row < ROWS and 0 <= col < COLS):
+        return
+    try:
+        result = gameOfLife.evalCell(grid, row, col)
+        _cell_eval = (row, col, bool(result), pygame.time.get_ticks())
+    except Exception:
+        traceback.print_exc(file=sys.stderr)
+
+
+def _draw_cell_eval(surface: pygame.Surface) -> None:
+    if _cell_eval is None:
+        return
+    row, col, will_live, start = _cell_eval
+    elapsed = pygame.time.get_ticks() - start
+    if elapsed >= EVAL_DURATION:
+        return
+    if elapsed % EVAL_BLINK_PERIOD < EVAL_BLINK_PERIOD // 2:
+        color = (50, 255, 80) if will_live else (255, 50, 50)
+        pygame.draw.rect(surface, color, (col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+
 
 def apply_drag(px: int, py: int) -> None:
     col = px // CELL_SIZE
@@ -165,7 +195,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1 and not any(b.handle_click(event.pos) for b in buttons):
+            if event.button == 3:
+                _eval_cell_at(*event.pos)
+            elif event.button == 1 and not any(b.handle_click(event.pos) for b in buttons):
                 dragging = True
                 px, py = event.pos
                 col = px // CELL_SIZE
@@ -182,6 +214,7 @@ while running:
 
     _reload_if_changed()
     grid.draw(screen)
+    _draw_cell_eval(screen)
     pygame.draw.rect(screen, COLOR_SIDEBAR, (GRID_WIDTH, 0, SIDEBAR_WIDTH, HEIGHT))
     for b in buttons:
         b.draw(screen, font)
